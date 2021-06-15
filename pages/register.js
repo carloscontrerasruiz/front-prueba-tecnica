@@ -3,6 +3,7 @@ import {useState} from 'react'
 import { useRouter } from 'next/router' 
 import Head from 'next/head'
 import NavBar from '/components/navBar'
+import { registerUser } from '/services/userService'
 
 export default function Register(){
     const [username, setUsername] = useState("")
@@ -17,23 +18,13 @@ export default function Register(){
         const regexUsername = /^[a-zA-Z0-9]{5,10}$/
         const regexPass = /^[a-zA-Z0-9!$&?¡¿]{8,15}$/
         const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        if(!regexUsername.test(username) || !regexPass.test(pass) ){
+        if(!regexUsername.test(username) || !regexPass.test(pass) || !regexEmail.test(email)){
             setNotificationMessage("Formato de usuario, email o password invalido")
-            return
-        }
-        if(!regexEmail.test(email)){
-            console.log("email incorecto")
             return
         }
 
         //Peticion
-        const requestOptions={
-            method:"POST",
-            headers:{'Content-Type': 'application/json'},
-            body:JSON.stringify({ "correo":email,"nombreUsuario": username,"password": pass})
-        }
-        fetch('http://localhost:9191/api/users/v1/user',requestOptions)
-        .then(response=>response.json())
+        registerUser(email,username,pass)
         .then(data=>{
                 //Login exitoso se envia a otar pagina
                 if(data.error){

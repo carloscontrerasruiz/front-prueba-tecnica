@@ -2,11 +2,14 @@ import {useState, useEffect} from 'react'
 import Head from 'next/head'
 
 import NavBar from '/components/navBar'
+import { updateUser, getUserByName } from '/services/userService'
 
 export default function Profile(props){
     const [username, setUsername] = useState("")
     const [pass, setPass] = useState("")
     const [email, setEmail] = useState("")
+    const [notificationMessage,setNotificationMessage] = useState("")
+    const [succesMessage,setSuccesMessage] = useState("")
     const { body } = props.data
     
     useEffect(()=>{
@@ -20,25 +23,19 @@ export default function Profile(props){
         //Validacion de campos
         const regexUsername = /^[a-zA-Z0-9]{5,10}$/
         const regexPass = /^[a-zA-Z0-9!$&?¡¿]{8,15}$/
-        if(!regexUsername.test(username) || !regexPass.test(pass)){
-            setNotificationMessage("Formato de usuario o password invalido")
+        const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        if(!regexUsername.test(username) || !regexPass.test(pass) || !regexEmail.test(email)){
+            setNotificationMessage("Formato de usuario, email o password invalido")
             return
         }
 
         //Peticion
-        const requestOptions={
-            method:"POST",
-            headers:{'Content-Type': 'application/json'},
-            body:JSON.stringify({ "nombreUsuario": username,"password": pass})
-        }
-        fetch('http://localhost:9191/api/users/v1/login',requestOptions)
-        .then(response=>response.json())
+        updateUser(email,username,pass)
         .then(data=>{
-                //Login exitoso se envia a otar pagina
                 if(data.error){
                     setNotificationMessage(data.errorMessage)
                 }else{
-                    router.push(`/user/profile/${data.body.nombreUsuario}`)
+                    setSuccesMessage("Datos actualizados")
                 }
             }
         )
@@ -46,6 +43,9 @@ export default function Profile(props){
 
     }
 
+    const closeAlert = (func)=>{
+        func("")
+    }
     return (
         <>
             <Head>
@@ -54,6 +54,28 @@ export default function Profile(props){
             </Head>
             <NavBar/>
             <div className="container">
+                    { succesMessage &&
+                        <div className="row ">
+                            <div className="offset-md-4 col-md-4 offset-md-4">
+                                <div className="alert alert-info alert-dismissible fade show" role="alert">
+                                    {succesMessage}
+                                    <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" 
+                                        onClick={()=>closeAlert(setSuccesMessage)}></button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    { notificationMessage &&
+                        <div className="row ">
+                            <div className="offset-md-4 col-md-4 offset-md-4">
+                                <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                                    {notificationMessage}
+                                    <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                                        onClick={()=>closeAlert(setNotificationMessage)}></button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 <div className="row ">
                     <div className="col"></div>
                     <div className="col">
@@ -61,7 +83,7 @@ export default function Profile(props){
                             <div className="mb-3">
                                 <label htmlFor="usernameInput" className="form-label">Username</label>
                                 <input type="text" className="form-control" id="usernameInput" aria-describedby="emailHelp"
-                                value={username}
+                                value={username} disabled
                                 onChange={(e)=>setUsername(e.target.value)}/>
                             </div>
                             <div className="mb-3">
@@ -83,8 +105,11 @@ export default function Profile(props){
                 </div>
             </div>
             <style jsx>{`
+                .container{
+                    margin-top: 30px;
+                }
                 form {
-                margin-top: 50px;
+                    margin-top: 10px;
                 }
                 
             `}</style>
@@ -95,7 +120,7 @@ export default function Profile(props){
 export async function getServerSideProps(context){
     const { params, res }= context
     const { username } = params
-    const response = await fetch(`http://localhost:9191/api/users/v1/user/${username}`)
+    const response = await getUserByName(username)
     const data = await response.json()
     if (!data) {
         return {
@@ -108,6 +133,6 @@ export async function getServerSideProps(context){
           }
     }
     return {
-        props: { data }, // will be passed to the page component as props
+        props: { data }, 
     }
 }

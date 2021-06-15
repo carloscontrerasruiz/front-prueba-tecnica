@@ -2,6 +2,7 @@ import {useState} from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
+import { loginService } from '/services/userService'
 import NavBar from '/components/navBar'
 
 export default function Login(){
@@ -23,13 +24,7 @@ export default function Login(){
         }
 
         //Peticion
-        const requestOptions={
-            method:"POST",
-            headers:{'Content-Type': 'application/json'},
-            body:JSON.stringify({ "nombreUsuario": username,"password": pass})
-        }
-        fetch('http://localhost:9191/api/users/v1/login',requestOptions)
-        .then(response=>response.json())
+        loginService(username,pass)
         .then(data=>{
                 //Login exitoso se envia a otar pagina
                 if(data.error){
