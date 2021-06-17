@@ -2,6 +2,8 @@ import {useState} from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
+import { useCookies } from 'react-cookie';
+
 import { loginService } from '/services/userService'
 import NavBar from '/components/navBar'
 
@@ -10,8 +12,7 @@ export default function Login(){
     const [pass, setPass] = useState("")
     const [notificationMessage,setNotificationMessage] = useState("")
     const router = useRouter()
-
-    
+    const [cookies, setCookie] = useCookies();
 
     const loginSubmit = (e)=>{
         e.preventDefault();
@@ -30,6 +31,9 @@ export default function Login(){
                 if(data.error){
                     setNotificationMessage(data.errorMessage)
                 }else{
+                    console.log(data.body)
+                    setCookie('jwt', data.body.jwt, { path: '/' });
+                    setCookie('username', data.body.nombreUsuario, { path: '/' });
                     router.push(`/user/profile/${data.body.nombreUsuario}`)
                 }
             }

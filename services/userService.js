@@ -1,4 +1,9 @@
 const url = "http://localhost:9191/api/users/v1"
+import { useCookies } from 'react-cookie';
+
+function createBearer(){
+
+}
 
 export const loginService = (username,pass)=>{
     const requestOptions={
@@ -10,18 +15,27 @@ export const loginService = (username,pass)=>{
         .then(response=>response.json())
 }
 
-export const updateUser = (email,username,pass)=>{
+export const updateUser = (email,username,pass,jwt="")=>{
     const requestOptions={
         method:"PUT",
-        headers:{'Content-Type': 'application/json'},
+        headers:{
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`,
+        },
         body:JSON.stringify({ "correo":email,"nombreUsuario": username,"password": pass})
     }
-    return fetch(`${url}/user`,requestOptions)
+    return fetch(`${url}/userUpdate`,requestOptions)
     .then(response=>response.json())
 }
 
-export const getUserByName=(username)=>{
-    return fetch(`${url}/user/${username}`)
+export const getUserByName=(username,jwt="")=>{
+    const requestOptions={
+        method:"GET",
+        headers:{
+            'Authorization': `Bearer ${jwt}`,
+        }
+    }
+    return fetch(`${url}/user/${username}`,requestOptions)
 }
 
 export const registerUser = (email,username,pass)=>{
@@ -30,6 +44,6 @@ export const registerUser = (email,username,pass)=>{
         headers:{'Content-Type': 'application/json'},
         body:JSON.stringify({ "correo":email,"nombreUsuario": username,"password": pass})
     }
-    return fetch(`${url}/user`,requestOptions)
+    return fetch(`${url}/userCreate`,requestOptions)
     .then(response=>response.json())
 }

@@ -1,8 +1,12 @@
 import {useState, useEffect} from 'react'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 
-import NavBar from '/components/navBar'
+import { useCookies } from 'react-cookie';
+
+import { NavBarAuth } from '/components/navBar'
 import { updateUser, getUserByName } from '/services/userService'
+import { transformCookie } from '/utilities'
 
 export default function Profile(props){
     const [username, setUsername] = useState("")
@@ -11,8 +15,15 @@ export default function Profile(props){
     const [notificationMessage,setNotificationMessage] = useState("")
     const [succesMessage,setSuccesMessage] = useState("")
     const { body } = props.data
+    const [cookies, setCookie] = useCookies();
+    const router = useRouter()
     
     useEffect(()=>{
+        //si no es el mismo usuario no puede ingresar
+        if(cookies.username != router.query.username){
+            router.replace('/')
+            return
+        }
         setUsername(body.nombreUsuario)
         setPass(body.password)
         setEmail(body.correo)
@@ -30,7 +41,7 @@ export default function Profile(props){
         }
 
         //Peticion
-        updateUser(email,username,pass)
+        updateUser(email,username,pass,cookies.jwt)
         .then(data=>{
                 if(data.error){
                     setNotificationMessage(data.errorMessage)
@@ -52,7 +63,7 @@ export default function Profile(props){
                 <title>Profile | {username}</title>
                 <meta name="description" content={`Profile page technical test user ${username}`} />
             </Head>
-            <NavBar/>
+            <NavBarAuth/>
             <div className="container">
                     { succesMessage &&
                         <div className="row ">
@@ -98,7 +109,7 @@ export default function Profile(props){
                                 value={pass}
                                 onChange={(e)=>setPass(e.target.value)}/>
                             </div>
-                            <button type="submit" className="btn btn-primary">Register</button>
+                            <button type="submit" className="btn btn-primary">Update</button>
                         </form>
                     </div>
                     <div className="col"></div>
@@ -120,7 +131,14 @@ export default function Profile(props){
 export async function getServerSideProps(context){
     const { params, res }= context
     const { username } = params
-    const response = await getUserByName(username)
+    const userCookie  = transformCookie(context.req.headers.cookie,"username")
+    if(!userCookie || userCookie.username != username){
+        return {
+            notFound: true,
+          }
+    }
+    const token = transformCookie(context.req.headers.cookie,"jwt")
+    const response = await getUserByName(username,token.jwt)
     const data = await response.json()
     if (!data) {
         return {
