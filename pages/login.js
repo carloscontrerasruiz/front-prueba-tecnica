@@ -31,7 +31,6 @@ export default function Login(){
                 if(data.error){
                     setNotificationMessage(data.errorMessage)
                 }else{
-                    console.log(data.body)
                     setCookie('jwt', data.body.jwt, { path: '/' });
                     setCookie('username', data.body.nombreUsuario, { path: '/' });
                     router.push(`/user/profile/${data.body.nombreUsuario}`)

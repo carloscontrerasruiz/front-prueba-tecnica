@@ -1,9 +1,4 @@
 const url = "http://localhost:9191/api/users/v1"
-import { useCookies } from 'react-cookie';
-
-function createBearer(){
-
-}
 
 export const loginService = (username,pass)=>{
     const requestOptions={
